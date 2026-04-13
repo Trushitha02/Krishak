@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krishak — Power Schedule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+.timeline-grid {
+  display:grid; grid-template-columns:80px 1fr;
+  gap:0; border:1px solid var(--border); border-radius:12px; overflow:hidden;
+}
+.hour-label {
+  padding:8px 10px; font-size:0.75rem; color:var(--text-lt);
+  border-bottom:1px solid var(--border); display:flex; align-items:center;
+  background:var(--cream); font-weight:600;
+}
+.hour-slot {
+  padding:8px 12px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px; transition:background 0.2s;
+}
+.hour-slot:last-child, .hour-label:last-child { border-bottom:none; }
+.slot-on-bg    { background:#f0f9ee; }
+.slot-off-bg   { background:#fafafa; }
+.slot-maint-bg { background:#fffbeb; }
+.slot-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.slot-dot-on    { background:var(--leaf); box-shadow:0 0 6px rgba(90,154,82,0.5); }
+.slot-dot-off   { background:var(--border); }
+.slot-dot-maint { background:var(--amber); box-shadow:0 0 6px rgba(217,119,6,0.4); }
+.slot-label { font-size:0.85rem; font-weight:600; flex:1; }
+.slot-note  { font-size:0.75rem; color:var(--text-lt); }
+.slot-status { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.status-on    { color:var(--leaf); }
+.status-off   { color:var(--text-lt); }
+.status-maint { color:var(--amber); }
+
+.now-indicator {
+  height:2px; background:var(--rust); position:relative; margin:2px 0;
+  transition:top 0.5s;
+}
+.now-indicator::before {
+  content:'NOW';
+  position:absolute; left:-85px; top:-8px;
+  font-size:0.65rem; font-weight:700; color:var(--rust);
+  background:var(--rust-lt); padding:2px 6px; border-radius:4px;
+}
+
+.countdown-card {
+  background:var(--leaf-bg); border:2px solid var(--leaf-lt);
+  border-radius:14px; padding:1.25rem; text-align:center;
+}
+.countdown-label { font-size:0.78rem; color:var(--leaf); font-weight:600; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px; }
+.countdown-time { font-size:2.5rem; font-weight:800; color:var(--leaf); font-variant-numeric:tabular-nums; letter-spacing:-0.02em; }
+.countdown-sub  { font-size:0.82rem; color:var(--text-lt); margin-top:4px; }
+
+.daily-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:1rem; }
+.dstat { background:var(--cream); border-radius:10px; padding:12px; text-align:center; border:1px solid var(--border); }
+.dstat-val { font-size:1.5rem; font-weight:700; color:var(--soil); }
+.dstat-lbl { font-size:0.72rem; color:var(--text-lt); text-transform:uppercase; letter-spacing:0.06em; }
+</style>
+</head>
+<body>
+<nav id="main-nav"></nav>
+
+<div class="page">
+  <div class="page-header fade-up">
+    <div class="page-title">⚡ <span id="title-text"></span></div>
+    <div class="page-subtitle" id="subtitle-text"></div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Current Status + Countdown -->
+    <div>
+      <!-- Live Status -->
+      <div class="card fade-up" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <div class="card-title">⚡ Current Status</div>
+          <div id="live-badge" class="badge badge-green">Checking...</div>
+        </div>
+        <div class="card-body">
+          <div style="text-align:center;margin-bottom:1rem;">
+            <div style="font-size:4rem;margin-bottom:8px;" id="status-icon">⚡</div>
+            <div style="font-size:1.3rem;font-weight:700;color:var(--soil);" id="status-text">Loading...</div>
+            <div style="font-size:0.85rem;color:var(--text-lt);margin-top:4px;" id="status-note"></div>
+          </div>
+          <div class="countdown-card" id="countdown-card">
+            <div class="countdown-label" id="cd-label">Next event in</div>
+            <div class="countdown-time" id="cd-time">--:--:--</div>
+            <div class="countdown-sub" id="cd-sub"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Stats -->
+      <div class="card fade-up delay-1" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <div class="card-title">📊 Today's Summary</div>
+        </div>
+        <div class="card-body">
+          <div class="daily-stats">
+            <div class="dstat">
+              <div class="dstat-val" style="color:var(--leaf);" id="total-on">0h</div>
+              <div class="dstat-lbl">Power On</div>
+            </div>
+            <div class="dstat">
+              <div class="dstat-val" style="color:var(--rust);" id="total-off">0h</div>
+              <div class="dstat-lbl">Power Off</div>
+            </div>
+            <div class="dstat">
+              <div class="dstat-val" style="color:var(--amber);" id="total-maint">0h</div>
+              <div class="dstat-lbl">Maintenance</div>
+            </div>
+          </div>
+          <!-- 24hr bar -->
+          <div style="margin-top:8px;">
+            <div style="font-size:0.75rem;color:var(--text-lt);margin-bottom:4px;font-weight:600;">24-hour power view</div>
+            <div style="display:flex;height:16px;border-radius:8px;overflow:hidden;border:1px solid var(--border);" id="power-bar-24"></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text-lt);margin-top:3px;">
+              <span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>12am</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Advisor -->
+      <div class="card fade-up delay-2">
+        <div class="card-header">
+          <div class="card-title">🤖 AI Irrigation Planner</div>
+        </div>
+        <div class="card-body">
+          <div class="ai-panel">
+            <div style="font-size:0.82rem;color:var(--leaf);font-weight:600;margin-bottom:8px;">Plan irrigation based on power schedule</div>
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.78rem;">Your crop</label>
+              <select class="form-select" id="irr-crop" style="font-size:0.82rem;">
+                <option>Rice / Paddy</option>
+                <option>Cotton</option>
+                <option>Vegetables</option>
+                <option>Sugarcane</option>
+                <option>Groundnut</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.78rem;">Field area (acres)</label>
+              <input type="number" class="form-input" id="irr-area" value="2" style="font-size:0.82rem;">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="getIrrPlan()">
+              Generate Irrigation Plan
+            </button>
+            <div id="ai-irr-resp" class="ai-response" style="display:none;margin-top:0.75rem;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full Schedule -->
+    <div class="card fade-up delay-1">
+      <div class="card-header">
+        <div class="card-title">📅 Today's Power Schedule</div>
+        <select class="form-select" id="area-select" onchange="changeArea()" style="width:auto;padding:4px 8px;font-size:0.8rem;">
+          <option value="hyderabad">Hyderabad</option>
+          <option value="warangal">Warangal</option>
+          <option value="nizamabad">Nizamabad</option>
+          <option value="karimnagar">Karimnagar</option>
+        </select>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="timeline-grid" id="power-schedule" style="border:none;border-radius:0;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Pattern -->
+  <div class="card fade-up" style="margin-top:1rem;">
+    <div class="card-header">
+      <div class="card-title">📆 Weekly Power Pattern</div>
+      <span class="badge badge-wheat">Current Week</span>
+    </div>
+    <div class="card-body">
+      <canvas id="weekly-chart" height="80"></canvas>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <div class="card fade-up delay-1" style="margin-top:1rem;">
+    <div class="card-header">
+      <div class="card-title">💡 Power Management Tips</div>
+    </div>
+    <div class="card-body" id="power-tips"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="shared.js"></script>
+<script>
+// Power schedules by area
+const SCHEDULES = {
+  hyderabad: [
+    { from:0, to:2, status:'off', note:'Night cut' },
+    { from:2, to:4, status:'on', note:'Early morning supply' },
+    { from:4, to:6, status:'on', note:'Morning irrigation window' },
+    { from:6, to:8, status:'on', note:'Peak irrigation time' },
+    { from:8, to:10, status:'off', note:'Morning cut' },
+    { from:10, to:12, status:'on', note:'Mid-morning supply' },
+    { from:12, to:14, status:'maint', note:'System check / maintenance' },
+    { from:14, to:16, status:'on', note:'Afternoon supply' },
+    { from:16, to:18, status:'off', note:'Evening load cut' },
+    { from:18, to:20, status:'on', note:'Evening irrigation window' },
+    { from:20, to:22, status:'on', note:'Night supply' },
+    { from:22, to:24, status:'off', note:'Late night cut' },
+  ],
+  warangal: [
+    { from:0, to:3, status:'off', note:'Night cut' },
+    { from:3, to:7, status:'on', note:'Early supply' },
+    { from:7, to:9, status:'off', note:'Morning cut' },
+    { from:9, to:13, status:'on', note:'Daytime supply' },
+    { from:13, to:15, status:'maint', note:'Maintenance window' },
+    { from:15, to:19, status:'on', note:'Afternoon supply' },
+    { from:19, to:21, status:'off', note:'Evening cut' },
+    { from:21, to:24, status:'on', note:'Night supply' },
+  ],
+  nizamabad: [
+    { from:0, to:4, status:'on', note:'Night supply' },
+    { from:4, to:6, status:'maint', note:'Line maintenance' },
+    { from:6, to:10, status:'on', note:'Morning supply' },
+    { from:10, to:12, status:'off', note:'Peak cut' },
+    { from:12, to:16, status:'on', note:'Afternoon supply' },
+    { from:16, to:18, status:'off', note:'Evening cut' },
+    { from:18, to:24, status:'on', note:'Night supply' },
+  ],
+  karimnagar: [
+    { from:0, to:2, status:'on', note:'Early supply' },
+    { from:2, to:5, status:'off', note:'Night cut' },
+    { from:5, to:9, status:'on', note:'Morning window' },
+    { from:9, to:11, status:'maint', note:'Maintenance' },
+    { from:11, to:15, status:'on', note:'Midday supply' },
+    { from:15, to:17, status:'off', note:'Afternoon cut' },
+    { from:17, to:21, status:'on', note:'Evening supply' },
+    { from:21, to:24, status:'off', note:'Night cut' },
+  ],
+};
+
+let currentArea = 'hyderabad';
+let countdownTimer = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectNav('power');
+  document.getElementById('title-text').textContent = t('powerSchedule');
+  document.getElementById('subtitle-text').textContent = getLang()==='te' ? 'నేటి విద్యుత్ షెడ్యూల్ మరియు నీటిపారుదల ప్లాన్' : getLang()==='hi' ? 'आज का बिजली शेड्यूल और सिंचाई योजना' : 'Today\'s power schedule for irrigation planning';
+  renderSchedule();
+  renderWeeklyChart();
+  renderTips();
+  startLiveStatus();
+});
+
+function changeArea() {
+  currentArea = document.getElementById('area-select').value;
+  renderSchedule();
+  startLiveStatus();
+}
+
+function getCurrentSlot() {
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes()/60;
+  const sched = SCHEDULES[currentArea];
+  return sched.find(s => h >= s.from && h < s.to) || sched[0];
+}
+
+function startLiveStatus() {
+  if (countdownTimer) clearInterval(countdownTimer);
+  updateLiveStatus();
+  countdownTimer = setInterval(updateLiveStatus, 1000);
+}
+
+function updateLiveStatus() {
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes()/60;
+  const sched = SCHEDULES[currentArea];
+  const current = sched.find(s => h >= s.from && h < s.to) || sched[0];
+  const next = sched.find(s => s.from > current.from);
+
+  // Status
+  const icons = { on:'⚡', off:'🔌', maint:'🔧' };
+  const texts = { on: t('powerOn'), off: t('powerOn').replace('On','Off'), maint: t('maintenance') };
+  const badges = { on:'badge-green', off:'badge-rust', maint:'badge-amber' };
+  
+  document.getElementById('status-icon').textContent = icons[current.status];
+  document.getElementById('status-text').textContent = current.status === 'on' ? 'Power Available ✓' : current.status === 'maint' ? 'Maintenance in progress' : 'Power Not Available';
+  document.getElementById('status-note').textContent = current.note;
+  document.getElementById('live-badge').className = `badge ${badges[current.status]}`;
+  document.getElementById('live-badge').textContent = current.status.toUpperCase();
+
+  // Countdown to next change
+  if (next) {
+    const nextHour = next.from;
+    const nowSecs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const nextSecs = nextHour * 3600;
+    const diff = nextSecs - nowSecs;
+    if (diff > 0) {
+      const hh = Math.floor(diff / 3600);
+      const mm = Math.floor((diff % 3600) / 60);
+      const ss = diff % 60;
+      document.getElementById('cd-time').textContent = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+      document.getElementById('cd-label').textContent = next.status === 'on' ? 'Power returns in' : 'Power cuts in';
+      document.getElementById('cd-sub').textContent = `${next.status === 'on' ? '⚡ Supply at' : '🔌 Cut at'} ${String(nextHour).padStart(2,'0')}:00 — ${next.note}`;
+      document.getElementById('countdown-card').style.background = next.status === 'on' ? 'var(--leaf-bg)' : 'var(--rust-lt)';
+      document.getElementById('countdown-card').style.borderColor = next.status === 'on' ? 'var(--leaf-lt)' : 'var(--rust)';
+      document.getElementById('cd-time').style.color = next.status === 'on' ? 'var(--leaf)' : 'var(--rust)';
+      document.getElementById('cd-label').style.color = next.status === 'on' ? 'var(--leaf)' : 'var(--rust)';
+    }
+  }
+}
+
+function renderSchedule() {
+  const sched = SCHEDULES[currentArea];
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes()/60;
+
+  // Stats
+  let onH = 0, offH = 0, maintH = 0;
+  sched.forEach(s => {
+    const dur = s.to - s.from;
+    if (s.status === 'on') onH += dur;
+    else if (s.status === 'off') offH += dur;
+    else maintH += dur;
+  });
+  document.getElementById('total-on').textContent = onH + 'h';
+  document.getElementById('total-off').textContent = offH + 'h';
+  document.getElementById('total-maint').textContent = maintH + 'h';
+
+  // 24hr bar
+  const barColors = { on:'#3a6b35', off:'#d1c4b0', maint:'#d97706' };
+  document.getElementById('power-bar-24').innerHTML = sched.map(s =>
+    `<div style="width:${(s.to-s.from)/24*100}%;background:${barColors[s.status]};" title="${String(s.from).padStart(2,'0')}:00-${String(s.to).padStart(2,'0')}:00 (${s.status})"></div>`
+  ).join('');
+
+  // Schedule list
+  const bgClass = { on:'slot-on-bg', off:'slot-off-bg', maint:'slot-maint-bg' };
+  const dotClass = { on:'slot-dot-on', off:'slot-dot-off', maint:'slot-dot-maint' };
+  const stClass  = { on:'status-on', off:'status-off', maint:'status-maint' };
+  const stLabel  = { on: t('powerOn'), off: t('powerOff'), maint: t('maintenance') };
+
+  let html = '';
+  sched.forEach(s => {
+    const isCurrent = h >= s.from && h < s.to;
+    const label = `${String(s.from).padStart(2,'0')}:00 – ${String(s.to).padStart(2,'0')}:00`;
+    html += `
+      <div class="hour-label" style="${isCurrent?'background:var(--wheat-lt);font-weight:700;color:var(--soil)':''}">
+        ${label}${isCurrent?'<br><span style="font-size:0.65rem;color:var(--rust)">▶ NOW</span>':''}
+      </div>
+      <div class="hour-slot ${bgClass[s.status]} ${isCurrent?'border-left: 3px solid var(--leaf);':''}">
+        <div class="slot-dot ${dotClass[s.status]}"></div>
+        <div style="flex:1;">
+          <div class="slot-label">${s.note}</div>
+          <div class="slot-status ${stClass[s.status]}">${stLabel[s.status]}</div>
+        </div>
+        <div class="power-bar" style="width:60px;">
+          <div class="power-bar-fill" style="background:${s.status==='on'?'var(--leaf)':s.status==='maint'?'var(--amber)':'var(--border)'};width:${s.status==='on'?100:s.status==='maint'?50:20}%"></div>
+        </div>
+      </div>
+    `;
+  });
+  document.getElementById('power-schedule').innerHTML = html;
+}
+
+function renderWeeklyChart() {
+  const ctx = document.getElementById('weekly-chart').getContext('2d');
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  new Chart(ctx, {
+    type:'bar',
+    data: {
+      labels: days,
+      datasets: [
+        { label:'Power On (hrs)', data:[14,16,13,15,14,12,16], backgroundColor:'rgba(58,107,53,0.7)', stack:'a' },
+        { label:'Power Off (hrs)', data:[8,7,9,7,8,10,7], backgroundColor:'rgba(181,69,27,0.5)', stack:'a' },
+        { label:'Maintenance (hrs)', data:[2,1,2,2,2,2,1], backgroundColor:'rgba(217,119,6,0.6)', stack:'a' },
+      ]
+    },
+    options: {
+      responsive:true, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:12 } } },
+      scales: {
+        x: { stacked:true, ticks:{font:{size:11}} },
+        y: { stacked:true, max:24, ticks:{font:{size:11}} }
+      }
+    }
+  });
+}
+
+function renderTips() {
+  const tips = [
+    { icon:'💧', tip:'Use 06:00–08:00 power window for drip irrigation — low evaporation at this time.' },
+    { icon:'⚡', tip:'Run motor pumps during 2am–6am slot for maximum water availability at lower grid load.' },
+    { icon:'🔋', tip:'Consider solar pump backup for 10am–12pm period when grid power is cut.' },
+    { icon:'🕐', tip:'Set timer-based irrigation controllers to auto-start 15 minutes after power comes on.' },
+    { icon:'📱', tip:'Enable SMS alerts in TSREDCO app to get real-time power restoration notifications.' },
+  ];
+  document.getElementById('power-tips').innerHTML = tips.map(t => `
+    <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--border);align-items:flex-start;">
+      <span style="font-size:1.3rem;flex-shrink:0;">${t.icon}</span>
+      <span style="font-size:0.88rem;color:var(--text);line-height:1.6;">${t.tip}</span>
+    </div>
+  `).join('');
+}
+
+async function getIrrPlan() {
+  const crop = document.getElementById('irr-crop').value;
+  const area = document.getElementById('irr-area').value;
+  const sched = SCHEDULES[currentArea];
+  const onSlots = sched.filter(s => s.status === 'on').map(s => `${String(s.from).padStart(2,'0')}:00-${String(s.to).padStart(2,'0')}:00`).join(', ');
+  const resp = document.getElementById('ai-irr-resp');
+  resp.style.display = 'block';
+  resp.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
+  const answer = await callAI(
+    `Power available times today: ${onSlots}. Crop: ${crop}, Field area: ${area} acres, Location: Telangana. 
+    Create an optimal irrigation plan using available power slots. Include: which slots to use, how long to run pumps, water amount needed, any warnings.`
+  );
+  resp.textContent = answer;
+}
+</script>
+</body>
+</html>
