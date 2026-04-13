@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krishak — Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+.price-card {
+  padding:12px 14px; border-radius:10px; border:1px solid var(--border);
+  background:white; margin-bottom:6px; display:flex; align-items:center; gap:12px;
+  cursor:pointer; transition:all 0.2s;
+}
+.price-card:hover { border-color:var(--leaf-lt); transform:translateX(2px); }
+.price-card.expanded { border-color:var(--leaf); background:var(--leaf-bg); }
+.price-main { flex:1; }
+.price-crop { font-weight:600; color:var(--soil); font-size:0.95rem; }
+.price-mkt  { font-size:0.75rem; color:var(--text-lt); }
+.price-val  { text-align:right; }
+.price-num  { font-size:1.1rem; font-weight:700; color:var(--soil); }
+.price-unit { font-size:0.72rem; color:var(--text-lt); }
+.price-chg  { font-size:0.82rem; font-weight:600; }
+.price-detail { display:none; padding:10px 0 0; border-top:1px solid var(--border); margin-top:10px; }
+.price-detail.show { display:block; }
+
+.filter-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:1rem; }
+.filter-tab {
+  padding:6px 14px; border-radius:20px; border:1px solid var(--border);
+  background:white; cursor:pointer; font-size:0.82rem; font-weight:600;
+  font-family:inherit; color:var(--text-md); transition:all 0.2s;
+}
+.filter-tab.active { background:var(--leaf); color:white; border-color:var(--leaf); }
+.filter-tab:hover:not(.active) { border-color:var(--leaf-lt); }
+
+.shop-row {
+  display:flex; align-items:center; gap:12px;
+  padding:12px; border-radius:10px; border:1px solid var(--border);
+  background:white; margin-bottom:6px; transition:all 0.2s;
+}
+.shop-row:hover { border-color:var(--leaf-lt); box-shadow:var(--shadow); }
+.shop-avatar {
+  width:44px; height:44px; border-radius:10px; background:var(--leaf-bg);
+  display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+  flex-shrink:0; border:1px solid var(--leaf-lt);
+}
+.shop-info { flex:1; }
+.shop-name { font-weight:600; color:var(--soil); font-size:0.92rem; }
+.shop-type { font-size:0.75rem; color:var(--text-lt); }
+.shop-location { font-size:0.8rem; color:var(--text-md); margin-top:2px; }
+.shop-contact { text-align:right; }
+.shop-phone { font-size:0.82rem; font-weight:600; color:var(--sky); }
+.shop-dist { font-size:0.72rem; color:var(--text-lt); }
+</style>
+</head>
+<body>
+<nav id="main-nav"></nav>
+
+<div class="page">
+  <div class="page-header fade-up">
+    <div class="page-title">📈 <span id="title-text"></span></div>
+    <div class="page-subtitle" id="subtitle-text"></div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="grid-3 fade-up" style="margin-bottom:1rem;">
+    <div class="stat-card">
+      <div class="stat-label">Active Mandis</div>
+      <div class="stat-value">24</div>
+      <div class="stat-change up">↑ 3 new this week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Top Gainer</div>
+      <div class="stat-value" style="font-size:1.1rem;">🌶️ Chilli</div>
+      <div class="stat-change up">↑ ₹650 per quintal</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Market Sentiment</div>
+      <div class="stat-value" style="font-size:1.1rem;color:var(--leaf)">Bullish</div>
+      <div class="stat-change up">Kharif season demand</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Price Ticker -->
+    <div class="card fade-up delay-1">
+      <div class="card-header">
+        <div class="card-title">💰 Market Prices</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="badge badge-green" style="animation:pulse 2s infinite">● Live</span>
+          <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}</style>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0.75rem;">
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="filterCrops('all',this)">All</button>
+          <button class="filter-tab" onclick="filterCrops('cereal',this)">Cereals</button>
+          <button class="filter-tab" onclick="filterCrops('cash',this)">Cash Crops</button>
+          <button class="filter-tab" onclick="filterCrops('pulse',this)">Pulses</button>
+          <button class="filter-tab" onclick="filterCrops('veg',this)">Vegetables</button>
+        </div>
+        <div id="price-list"></div>
+      </div>
+    </div>
+
+    <!-- AI Market Advisor -->
+    <div>
+      <div class="card fade-up delay-2" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <div class="card-title">🤖 AI Market Advisor</div>
+        </div>
+        <div class="card-body">
+          <div class="ai-panel">
+            <div style="font-size:0.82rem;color:var(--leaf);font-weight:600;margin-bottom:8px;">Ask about prices, selling strategy, or market trends</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <input class="form-input" id="market-q" placeholder="e.g. When is best time to sell rice?" style="flex:1;font-size:0.85rem;">
+              <button class="btn btn-primary" style="padding:8px 14px;" onclick="askMarketAI()">→</button>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:0.75rem;" onclick="quickAsk('Should I sell cotton now or wait?')">Cotton timing</button>
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:0.75rem;" onclick="quickAsk('What crops will have high prices next month?')">Price forecast</button>
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:0.75rem;" onclick="quickAsk('How to get better prices for my produce?')">Better prices</button>
+            </div>
+            <div id="ai-market-resp" class="ai-response" style="display:none;margin-top:0.75rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Price Chart -->
+      <div class="card fade-up delay-3">
+        <div class="card-header">
+          <div class="card-title">📊 Price Trend</div>
+          <select class="form-select" id="chart-crop" onchange="updateChart()" style="width:auto;padding:4px 8px;font-size:0.8rem;">
+            <option value="rice">Rice</option>
+            <option value="cotton">Cotton</option>
+            <option value="maize">Maize</option>
+            <option value="chilli">Chilli</option>
+          </select>
+        </div>
+        <div class="card-body" style="padding:1rem;">
+          <canvas id="price-chart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shops & Services -->
+  <div class="card fade-up" style="margin-top:1rem;">
+    <div class="card-header">
+      <div class="card-title">🏪 Nearby Shops & Services</div>
+      <input class="form-input" id="shop-search" placeholder="Search shops..." oninput="filterShops()" style="width:180px;padding:5px 10px;font-size:0.82rem;">
+    </div>
+    <div class="card-body">
+      <div class="filter-tabs" style="margin-bottom:0.75rem;">
+        <button class="filter-tab active" onclick="filterShopType('all',this)">All</button>
+        <button class="filter-tab" onclick="filterShopType('fertilizer',this)">Fertilizer</button>
+        <button class="filter-tab" onclick="filterShopType('seed',this)">Seeds</button>
+        <button class="filter-tab" onclick="filterShopType('equipment',this)">Equipment</button>
+        <button class="filter-tab" onclick="filterShopType('mandi',this)">Mandi</button>
+      </div>
+      <div id="shop-list"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="shared.js"></script>
+<script>
+const PRICES = [
+  { name:'Rice', icon:'🌾', cat:'cereal', price:2150, change:85,  unit:'₹/qtl', mandi:'Hyderabad APMC', msp:2183, trend:[2050,2080,2100,2090,2150,2120,2150] },
+  { name:'Cotton', icon:'🌿', cat:'cash', price:6800, change:-120, unit:'₹/qtl', mandi:'Warangal Mandi', msp:6620, trend:[6900,6850,6820,6800,6780,6800,6800] },
+  { name:'Maize', icon:'🌽', cat:'cereal', price:1890, change:45,  unit:'₹/qtl', mandi:'Nizamabad APMC', msp:1962, trend:[1820,1840,1860,1870,1880,1890,1890] },
+  { name:'Chilli', icon:'🌶️', cat:'cash', price:12400, change:650, unit:'₹/qtl', mandi:'Guntur Mandi', msp:null, trend:[11200,11500,11800,12000,12100,12300,12400] },
+  { name:'Tur Dal', icon:'🫘', cat:'pulse', price:7200, change:180, unit:'₹/qtl', mandi:'Kurnool APMC', msp:7000, trend:[6800,6900,7000,7050,7100,7150,7200] },
+  { name:'Groundnut', icon:'🥜', cat:'cash', price:5600, change:-80, unit:'₹/qtl', mandi:'Nandyal Mandi', msp:5850, trend:[5700,5680,5650,5630,5610,5600,5600] },
+  { name:'Onion', icon:'🧅', cat:'veg', price:2800, change:320, unit:'₹/qtl', mandi:'Hyderabad', msp:null, trend:[2200,2300,2400,2500,2600,2700,2800] },
+  { name:'Tomato', icon:'🍅', cat:'veg', price:4200, change:900, unit:'₹/qtl', mandi:'Madanapalle', msp:null, trend:[2800,3100,3400,3700,3900,4100,4200] },
+  { name:'Soybean', icon:'🫘', cat:'pulse', price:3980, change:60, unit:'₹/qtl', mandi:'Nanded Mandi', msp:4300, trend:[3850,3880,3900,3930,3950,3970,3980] },
+  { name:'Wheat', icon:'🌾', cat:'cereal', price:2250, change:30, unit:'₹/qtl', mandi:'Punjab Mandi', msp:2275, trend:[2180,2200,2210,2220,2230,2240,2250] },
+];
+
+const SHOPS = [
+  { name:'AgroMart Hyderabad', type:'fertilizer', icon:'🧪', owner:'Ravi Kumar', loc:'Secunderabad', dist:'2.3 km', phone:'9876543210', rating:4.5 },
+  { name:'Kisan Beej Bhandar', type:'seed', icon:'🌱', owner:'Suresh Reddy', loc:'Dilsukhnagar', dist:'4.1 km', phone:'9876543211', rating:4.2 },
+  { name:'Green Fields Co.', type:'fertilizer', icon:'🌿', owner:'Anand Sharma', loc:'LB Nagar', dist:'5.8 km', phone:'9876543212', rating:4.0 },
+  { name:'Kirloskar Agro Equip', type:'equipment', icon:'🚜', owner:'Venkat Rao', loc:'Uppal', dist:'7.2 km', phone:'9876543213', rating:4.7 },
+  { name:'Hyderabad APMC Yard', type:'mandi', icon:'🏛️', owner:'Govt. of TS', loc:'Malakpet', dist:'3.5 km', phone:'9876543214', rating:4.1 },
+  { name:'Nuziveedu Seeds', type:'seed', icon:'🫘', owner:'Branch Office', loc:'Ameerpet', dist:'6.0 km', phone:'9876543215', rating:4.8 },
+  { name:'Agri Equipment Hub', type:'equipment', icon:'⚙️', owner:'Krishna Murthy', loc:'ECIL', dist:'9.1 km', phone:'9876543216', rating:3.9 },
+  { name:'Warangal Mandi', type:'mandi', icon:'🏪', owner:'Govt. Mandi', loc:'Warangal', dist:'145 km', phone:'9876543217', rating:4.3 },
+];
+
+let currentFilter = 'all';
+let shopFilter = 'all';
+let chart = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectNav('market');
+  document.getElementById('title-text').textContent = t('marketPrices');
+  document.getElementById('subtitle-text').textContent = getLang()==='te' ? 'స్థానిక మార్కెట్ ధరలు మరియు దుకాణాల సమాచారం' : getLang()==='hi' ? 'स्थानीय बाज़ार भाव और दुकान की जानकारी' : 'Live market prices and nearby agricultural services';
+  renderPrices('all');
+  renderShops('all');
+  renderChart('rice');
+});
+
+function renderPrices(cat) {
+  const filtered = cat === 'all' ? PRICES : PRICES.filter(p => p.cat === cat);
+  document.getElementById('price-list').innerHTML = filtered.map((p, i) => {
+    const up = p.change >= 0;
+    const belowMsp = p.msp && p.price < p.msp;
+    return `
+      <div class="price-card" onclick="toggleDetail(this)">
+        <span style="font-size:1.4rem;">${p.icon}</span>
+        <div class="price-main">
+          <div class="price-crop">${p.name} ${belowMsp?'<span class="badge badge-rust" style="font-size:0.68rem;">Below MSP</span>':''}</div>
+          <div class="price-mkt">📍 ${p.mandi}</div>
+        </div>
+        <div class="price-val">
+          <div class="price-num">${p.price.toLocaleString('en-IN')}</div>
+          <div class="price-unit">${p.unit}</div>
+          <div class="price-chg" style="color:${up?'var(--leaf)':'var(--rust)'}">${up?'↑':'↓'} ₹${Math.abs(p.change)}</div>
+        </div>
+        <div class="price-detail">
+          ${p.msp ? `<div style="font-size:0.8rem;color:var(--text-md)">MSP: ₹${p.msp}/qtl &nbsp;|&nbsp; <strong style="color:${p.price>=p.msp?'var(--leaf)':'var(--rust)'}">${p.price>=p.msp?'Above MSP ✓':'Below MSP ⚠️'}</strong></div>` : ''}
+          <div style="font-size:0.78rem;color:var(--text-lt);margin-top:4px;">7-day trend: ${p.trend[0].toLocaleString('en-IN')} → ${p.trend[6].toLocaleString('en-IN')} ${p.trend[6]>p.trend[0]?'↑':'↓'}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleDetail(card) {
+  const detail = card.querySelector('.price-detail');
+  if (detail) {
+    detail.classList.toggle('show');
+    card.classList.toggle('expanded');
+  }
+}
+
+function filterCrops(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPrices(cat);
+}
+
+function renderShops(type) {
+  const shops = type === 'all' ? SHOPS : SHOPS.filter(s => s.type === type);
+  const q = document.getElementById('shop-search').value.toLowerCase();
+  const filtered = q ? shops.filter(s => s.name.toLowerCase().includes(q) || s.loc.toLowerCase().includes(q)) : shops;
+  document.getElementById('shop-list').innerHTML = filtered.map(s => `
+    <div class="shop-row">
+      <div class="shop-avatar">${s.icon}</div>
+      <div class="shop-info">
+        <div class="shop-name">${s.name} ${'★'.repeat(Math.round(s.rating))} <span style="font-size:0.72rem;color:var(--text-lt)">(${s.rating})</span></div>
+        <div class="shop-type"><span class="badge badge-wheat" style="font-size:0.68rem;">${s.type}</span></div>
+        <div class="shop-location">📍 ${s.loc} · ${s.dist}</div>
+      </div>
+      <div class="shop-contact">
+        <div class="shop-phone">📞 ${s.phone}</div>
+        <div class="shop-dist">${s.owner}</div>
+        <a href="tel:${s.phone}" style="font-size:0.75rem;color:var(--leaf);text-decoration:none;font-weight:600;">Call →</a>
+      </div>
+    </div>
+  `).join('') || '<div style="text-align:center;color:var(--text-lt);padding:1rem;">No shops found</div>';
+}
+
+function filterShopType(type, btn) {
+  shopFilter = type;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderShops(type);
+}
+
+function filterShops() {
+  renderShops(shopFilter);
+}
+
+function renderChart(cropName) {
+  const crop = PRICES.find(p => p.name.toLowerCase() === cropName.toLowerCase()) || PRICES[0];
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const ctx = document.getElementById('price-chart').getContext('2d');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type:'line',
+    data: {
+      labels: days,
+      datasets:[{
+        label: `${crop.icon} ${crop.name} (${crop.unit})`,
+        data: crop.trend,
+        borderColor: '#3a6b35',
+        backgroundColor: 'rgba(58,107,53,0.08)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#3a6b35',
+      }]
+    },
+    options: {
+      responsive:true, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:12 } } },
+      scales:{ y:{ ticks:{ font:{size:11} } }, x:{ ticks:{ font:{size:11} } } }
+    }
+  });
+}
+
+function updateChart() {
+  const v = document.getElementById('chart-crop').value;
+  renderChart(v);
+}
+
+async function askMarketAI() {
+  const q = document.getElementById('market-q').value.trim();
+  if (!q) return;
+  await doMarketAI(q);
+}
+
+async function quickAsk(q) {
+  document.getElementById('market-q').value = q;
+  await doMarketAI(q);
+}
+
+async function doMarketAI(q) {
+  const priceStr = PRICES.slice(0,5).map(p => `${p.name}: ₹${p.price} (${p.change>=0?'+':''}${p.change})`).join(', ');
+  const resp = document.getElementById('ai-market-resp');
+  resp.style.display = 'block';
+  resp.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
+  const answer = await callAI(
+    `Current market prices: ${priceStr}. Farmer question: ${q}. Location: Telangana, India. Give practical advice.`
+  );
+  resp.textContent = answer;
+}
+</script>
+</body>
+</html>
