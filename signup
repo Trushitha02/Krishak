@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krishak — Create Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --soil:    #2d1f14;
+  --soil-md: #4a3020;
+  --cream:   #faf7f0;
+  --wheat:   #e8c97a;
+  --wheat-lt:#f7edca;
+  --leaf:    #3a6b35;
+  --leaf-lt: #5a9a52;
+  --leaf-bg: #eaf4e8;
+  --border:  #ddd0bc;
+  --text:    #1c1208;
+  --text-md: #5a4030;
+  --text-lt: #9c8070;
+  --rust:    #c0431a;
+  --error:   #fdf0ec;
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: 'Sora', 'Noto Sans Telugu', 'Noto Sans Devanagari', sans-serif;
+  background: var(--cream);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+
+/* ── LEFT PANEL — illustrated ── */
+.left-panel {
+  background: var(--soil);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 3rem;
+}
+
+/* Layered field illustration */
+.field-sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #0d2b4a 0%, #1a4a7a 35%, #2e7bb5 60%, #5ba3d9 80%, #88c1e8 100%);
+}
+.field-sun {
+  position: absolute;
+  top: 12%;
+  left: 55%;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe066 30%, #f5b942 60%, transparent 80%);
+  animation: sunrise 3s ease-out both;
+}
+@keyframes sunrise {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.field-hills {
+  position: absolute;
+  bottom: 35%;
+  left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(180deg, transparent 0%, #2a5027 60%, #1e3d1c 100%);
+  clip-path: ellipse(60% 60% at 30% 100%);
+}
+.field-hills-2 {
+  position: absolute;
+  bottom: 30%;
+  left: 0; right: 0;
+  height: 180px;
+  background: linear-gradient(180deg, transparent 0%, #3a6b35 50%, #2a5027 100%);
+  clip-path: ellipse(70% 50% at 70% 100%);
+}
+.field-ground {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 38%;
+  background: linear-gradient(180deg, #3a2010 0%, #2d1f14 100%);
+}
+.crop-row-wrap {
+  position: absolute;
+  bottom: 32%;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 0 1rem;
+}
+.crop-stalk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: sway 3s ease-in-out infinite alternate;
+}
+.crop-stalk:nth-child(odd)  { animation-delay: -1.5s; }
+.crop-stalk:nth-child(3n)   { animation-delay: -0.8s; }
+@keyframes sway {
+  from { transform: rotate(-3deg); }
+  to   { transform: rotate(3deg); }
+}
+.crop-emoji { font-size: 1.6rem; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
+
+/* Stars */
+.stars {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 40%;
+  overflow: hidden;
+}
+.star {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  animation: twinkle 3s infinite;
+}
+@keyframes twinkle {
+  0%,100% { opacity: 0; } 50% { opacity: 0.8; }
+}
+
+/* Left text content */
+.left-content {
+  position: relative;
+  z-index: 10;
+  color: white;
+  animation: fadeUp 0.8s ease both 0.3s;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.left-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+.left-logo {
+  width: 48px; height: 48px;
+  background: rgba(232,201,122,0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(232,201,122,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+}
+.left-appname {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--wheat);
+  letter-spacing: 0.02em;
+}
+.left-heading {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  color: white;
+}
+.left-heading span { color: var(--wheat); }
+.left-para {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  max-width: 320px;
+}
+.left-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.left-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.85);
+}
+.feat-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--wheat);
+  flex-shrink: 0;
+}
+
+/* ── RIGHT PANEL — form ── */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 4rem;
+  overflow-y: auto;
+}
+
+.form-header { margin-bottom: 2rem; }
+.form-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--soil);
+  margin-bottom: 6px;
+}
+.form-subtitle { font-size: 0.88rem; color: var(--text-lt); }
+.form-subtitle a { color: var(--leaf); font-weight: 600; text-decoration: none; }
+.form-subtitle a:hover { text-decoration: underline; }
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2rem;
+}
+.step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: all 0.3s;
+}
+.step.active   { background: var(--leaf); color: white; }
+.step.done     { background: var(--leaf-bg); color: var(--leaf); border: 2px solid var(--leaf-lt); }
+.step.inactive { background: #f0ebe0; color: var(--text-lt); }
+.step-line { flex: 1; height: 2px; background: var(--border); }
+.step-line.done { background: var(--leaf-lt); }
+.step-label { font-size: 0.72rem; color: var(--text-lt); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { margin-bottom: 1rem; }
+.form-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--soil);
+  margin-bottom: 6px;
+}
+.form-label .req { color: var(--rust); }
+
+.input-wrap { position: relative; }
+.form-input {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 3px rgba(58,107,53,0.12);
+}
+.form-input.error {
+  border-color: var(--rust);
+  box-shadow: 0 0 0 3px rgba(192,67,26,0.1);
+}
+.form-input.success { border-color: var(--leaf-lt); }
+.input-icon {
+  position: absolute;
+  left: 13px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+.input-suffix {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--text-lt);
+  background: none; border: none;
+}
+.field-error {
+  font-size: 0.75rem;
+  color: var(--rust);
+  margin-top: 4px;
+  display: none;
+}
+.field-error.show { display: block; }
+
+.form-input-plain {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input-plain:focus {
+  outline: none;
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 3px rgba(58,107,53,0.12);
+}
+
+.strength-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.strength-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s, background 0.3s;
+}
+.strength-label {
+  font-size: 0.72rem;
+  margin-top: 3px;
+  font-weight: 600;
+}
+
+.lang-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.lang-opt {
+  padding: 10px 6px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: white;
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-md);
+  transition: all 0.2s;
+}
+.lang-opt:hover { border-color: var(--leaf-lt); background: var(--leaf-bg); }
+.lang-opt.selected { border-color: var(--leaf); background: var(--leaf-bg); color: var(--leaf); }
+.lang-opt .flag { display: block; font-size: 1.3rem; margin-bottom: 3px; }
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+.checkbox-row input[type=checkbox] {
+  accent-color: var(--leaf);
+  width: 16px; height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.checkbox-row label {
+  font-size: 0.82rem;
+  color: var(--text-md);
+  line-height: 1.5;
+  cursor: pointer;
+}
+.checkbox-row label a { color: var(--leaf); font-weight: 600; text-decoration: none; }
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--leaf);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.02em;
+}
+.submit-btn:hover { background: var(--leaf-lt); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(58,107,53,0.3); }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 1.2rem 0;
+  font-size: 0.78rem;
+  color: var(--text-lt);
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.social-btn {
+  width: 100%;
+  padding: 11px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.15s;
+}
+.social-btn:hover { border-color: var(--leaf-lt); background: var(--leaf-bg); }
+
+/* Success screen */
+.success-screen {
+  display: none;
+  text-align: center;
+  animation: fadeUp 0.5s ease both;
+}
+.success-icon {
+  width: 80px; height: 80px;
+  background: var(--leaf-bg);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem;
+  margin: 0 auto 1.5rem;
+  border: 3px solid var(--leaf-lt);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: var(--soil);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 768px) {
+  body { grid-template-columns: 1fr; }
+  .left-panel { display: none; }
+  .right-panel { padding: 2rem 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── LEFT PANEL ── -->
+<div class="left-panel">
+  <div class="field-sky"></div>
+  <div class="field-sun"></div>
+  <div class="stars" id="stars"></div>
+  <div class="field-hills"></div>
+  <div class="field-hills-2"></div>
+  <div class="crop-row-wrap" id="crop-row"></div>
+  <div class="field-ground"></div>
+
+  <div class="left-content">
+    <div class="left-brand">
+      <div class="left-logo">🌱</div>
+      <div class="left-appname">Krishak</div>
+    </div>
+    <div class="left-heading">
+      Grow smarter,<br><span>harvest better.</span>
+    </div>
+    <p class="left-para">
+      Join thousands of Indian farmers using AI-powered insights to improve yields, track markets, and plan every season with confidence.
+    </p>
+    <div class="left-features">
+      <div class="left-feature"><div class="feat-dot"></div>Real-time market prices & MSP alerts</div>
+      <div class="left-feature"><div class="feat-dot"></div>Live weather + crop-specific advice</div>
+      <div class="left-feature"><div class="feat-dot"></div>AI soil analysis & crop recommendations</div>
+      <div class="left-feature"><div class="feat-dot"></div>Power schedule & irrigation planning</div>
+      <div class="left-feature"><div class="feat-dot"></div>Available in English, తెలుగు & हिन्दी</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── RIGHT PANEL ── -->
+<div class="right-panel">
+  <!-- FORM -->
+  <div id="signup-form">
+    <div class="form-header">
+      <div class="form-title">Create your account</div>
+      <div class="form-subtitle">Already a farmer with us? <a href="login.html">Sign in →</a></div>
+    </div>
+
+    <!-- Steps -->
+    <div class="step-indicator">
+      <div class="step active" id="step1">1</div>
+      <div class="step-line" id="line1"></div>
+      <div class="step inactive" id="step2">2</div>
+      <div class="step-line" id="line2"></div>
+      <div class="step inactive" id="step3">3</div>
+    </div>
+
+    <!-- STEP 1: Personal Info -->
+    <div id="page1">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" class="form-input" id="fname" placeholder="Ravi" oninput="validateField('fname')">
+          </div>
+          <div class="field-error" id="fname-err">Please enter your first name</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" class="form-input" id="lname" placeholder="Kumar" oninput="validateField('lname')">
+          </div>
+          <div class="field-error" id="lname-err">Please enter your last name</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Mobile Number <span class="req">*</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">📱</span>
+          <input type="tel" class="form-input" id="phone" placeholder="+91 98765 43210" maxlength="13" oninput="validateField('phone')">
+        </div>
+        <div class="field-error" id="phone-err">Enter a valid 10-digit mobile number</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <input type="email" class="form-input" id="email" placeholder="ravi@example.com" oninput="validateField('email')">
+        </div>
+        <div class="field-error" id="email-err">Enter a valid email address</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Village / Town <span class="req">*</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">📍</span>
+          <input type="text" class="form-input" id="village" placeholder="Nalgonda, Telangana" oninput="validateField('village')">
+        </div>
+        <div class="field-error" id="village-err">Please enter your location</div>
+      </div>
+
+      <button class="submit-btn" onclick="nextStep(1)">
+        Continue <span>→</span>
+      </button>
+    </div>
+
+    <!-- STEP 2: Farm Details -->
+    <div id="page2" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Land Holding (acres)</label>
+          <div class="input-wrap">
+            <span class="input-icon">🌾</span>
+            <input type="number" class="form-input" id="land" placeholder="e.g. 3.5" min="0" step="0.5">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Farming Type</label>
+          <select class="form-input-plain" id="farm-type" style="padding:12px 14px;">
+            <option value="">Select type</option>
+            <option>Subsistence Farming</option>
+            <option>Commercial Farming</option>
+            <option>Organic Farming</option>
+            <option>Mixed Farming</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Primary Crops (select all that apply)</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="crop-chips">
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="rice">🌾 Rice</button>
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="cotton">🌿 Cotton</button>
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="maize">🌽 Maize</button>
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="chilli">🌶️ Chilli</button>
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="sugarcane">🍬 Sugarcane</button>
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="groundnut">🥜 Groundnut</button>
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="soybean">🫘 Soybean</button>
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="wheat">🌾 Wheat</button>
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="vegetables">🥦 Vegetables</button>
+          <button type="button" class="chip" onclick="toggleChip(this)" data-val="other">➕ Other</button>
+        </div>
+        <style>
+          .chip {
+            padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+            background: white; cursor: pointer; font-family: inherit; font-size: 0.8rem;
+            font-weight: 600; color: var(--text-md); transition: all 0.15s;
+          }
+          .chip:hover { border-color: var(--leaf-lt); background: var(--leaf-bg); }
+          .chip.on { background: var(--leaf); color: white; border-color: var(--leaf); }
+        </style>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Irrigation Source</label>
+        <select class="form-input-plain" id="irrigation" style="padding:12px 14px;">
+          <option value="">Select source</option>
+          <option>Borewell</option>
+          <option>Canal Irrigation</option>
+          <option>Rainwater / Rainfed</option>
+          <option>Tank / Pond</option>
+          <option>Drip Irrigation</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Preferred Language</label>
+        <div class="lang-selector" id="lang-opts">
+          <button type="button" class="lang-opt selected" data-lang="en" onclick="selectLangOpt(this)">
+            <span class="flag">🇬🇧</span> English
+          </button>
+          <button type="button" class="lang-opt" data-lang="te" onclick="selectLangOpt(this)">
+            <span class="flag">🇮🇳</span> తెలుగు
+          </button>
+          <button type="button" class="lang-opt" data-lang="hi" onclick="selectLangOpt(this)">
+            <span class="flag">🇮🇳</span> हिन्दी
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button class="submit-btn" style="background:white;color:var(--soil);border:1.5px solid var(--border);flex:0 0 auto;width:auto;padding:14px 20px;" onclick="prevStep(2)">← Back</button>
+        <button class="submit-btn" onclick="nextStep(2)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Security -->
+    <div id="page3" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Create Password <span class="req">*</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" class="form-input" id="password" placeholder="Min. 8 characters" oninput="checkStrength()">
+          <button class="input-suffix" type="button" onclick="togglePass('password', this)">👁️</button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="str-bar" style="width:0%"></div></div>
+        <div class="strength-label" id="str-label" style="color:var(--text-lt)"></div>
+        <div class="field-error" id="pass-err">Password must be at least 8 characters</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm Password <span class="req">*</span></label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" class="form-input" id="confirm-pass" placeholder="Repeat your password" oninput="validateField('confirm-pass')">
+          <button class="input-suffix" type="button" onclick="togglePass('confirm-pass', this)">👁️</button>
+        </div>
+        <div class="field-error" id="confirm-pass-err">Passwords do not match</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Aadhar / Kisan ID (optional)</label>
+        <div class="input-wrap">
+          <span class="input-icon">🪪</span>
+          <input type="text" class="form-input" id="kisan-id" placeholder="For subsidy & scheme tracking">
+        </div>
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="terms">
+        <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a> of Krishak. I understand my data is used only for farming assistance.</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="sms-opt" checked>
+        <label for="sms-opt">Send me weather alerts, market updates, and government scheme notifications via SMS.</label>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button class="submit-btn" style="background:white;color:var(--soil);border:1.5px solid var(--border);flex:0 0 auto;width:auto;padding:14px 20px;" onclick="prevStep(3)">← Back</button>
+        <button class="submit-btn" id="submit-btn" onclick="submitForm()">
+          🌱 Create Account
+        </button>
+      </div>
+
+      <div class="divider">or sign up with</div>
+      <button class="social-btn" onclick="showToast('Google sign-up coming soon!')">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">🌱</div>
+    <div style="font-size:1.6rem;font-weight:800;color:var(--soil);margin-bottom:8px;">Welcome to Krishak!</div>
+    <div style="color:var(--text-lt);font-size:0.9rem;margin-bottom:2rem;line-height:1.7;" id="success-msg"></div>
+    <a href="lang.html" style="display:inline-flex;align-items:center;gap:8px;background:var(--leaf);color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem;transition:all 0.2s;">
+      Go to Dashboard 🚀
+    </a>
+    <div style="margin-top:1.5rem;font-size:0.82rem;color:var(--text-lt);">
+      Check your mobile for a verification SMS.
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentStep = 1;
+let selectedLang = 'en';
+
+// Generate stars
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 40; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*4}s;animation-duration:${2+Math.random()*3}s;`;
+  starsEl.appendChild(s);
+}
+
+// Generate crop row
+const crops = ['🌾','🌽','🌻','🌿','🌾','🌽','🌾','🌿','🌻','🌾','🌽','🌾'];
+document.getElementById('crop-row').innerHTML = crops.map(c =>
+  `<div class="crop-stalk"><div class="crop-emoji">${c}</div></div>`
+).join('');
+
+function nextStep(from) {
+  if (from === 1) {
+    if (!validatePage1()) return;
+  }
+  if (from === 2) {
+    // No required fields on page 2
+  }
+  if (from === 3) return;
+
+  document.getElementById('page' + from).style.display = 'none';
+  document.getElementById('page' + (from + 1)).style.display = 'block';
+
+  // Update indicators
+  document.getElementById('step' + from).className = 'step done';
+  document.getElementById('step' + from).textContent = '✓';
+  document.getElementById('line' + from).className = 'step-line done';
+  document.getElementById('step' + (from + 1)).className = 'step active';
+  currentStep = from + 1;
+}
+
+function prevStep(from) {
+  document.getElementById('page' + from).style.display = 'none';
+  document.getElementById('page' + (from - 1)).style.display = 'block';
+  document.getElementById('step' + (from - 1)).className = 'step active';
+  document.getElementById('step' + (from - 1)).textContent = from - 1;
+  document.getElementById('step' + from).className = 'step inactive';
+  document.getElementById('line' + (from - 1)).className = 'step-line';
+  currentStep = from - 1;
+}
+
+function validatePage1() {
+  let valid = true;
+  if (!document.getElementById('fname').value.trim()) {
+    showError('fname'); valid = false;
+  }
+  if (!document.getElementById('lname').value.trim()) {
+    showError('lname'); valid = false;
+  }
+  const phone = document.getElementById('phone').value.replace(/\D/g,'');
+  if (phone.length < 10) {
+    showError('phone'); valid = false;
+  }
+  if (!document.getElementById('village').value.trim()) {
+    showError('village'); valid = false;
+  }
+  return valid;
+}
+
+function showError(id) {
+  document.getElementById(id).classList.add('error');
+  document.getElementById(id + '-err').classList.add('show');
+}
+
+function clearError(id) {
+  document.getElementById(id).classList.remove('error');
+  document.getElementById(id + '-err').classList.remove('show');
+  document.getElementById(id).classList.add('success');
+}
+
+function validateField(id) {
+  const el = document.getElementById(id);
+  const v = el.value.trim();
+  if (id === 'fname' || id === 'lname' || id === 'village') {
+    if (v.length >= 2) clearError(id); else if (v.length > 0) showError(id);
+  }
+  if (id === 'phone') {
+    const digits = v.replace(/\D/g,'');
+    if (digits.length >= 10) clearError(id); else showError(id);
+  }
+  if (id === 'email') {
+    if (!v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) clearError(id); else showError(id);
+  }
+  if (id === 'confirm-pass') {
+    if (el.value === document.getElementById('password').value) clearError(id);
+    else showError(id);
+  }
+}
+
+function checkStrength() {
+  const p = document.getElementById('password').value;
+  const bar = document.getElementById('str-bar');
+  const lbl = document.getElementById('str-label');
+  let score = 0;
+  if (p.length >= 8) score++;
+  if (p.length >= 12) score++;
+  if (/[A-Z]/.test(p)) score++;
+  if (/[0-9]/.test(p)) score++;
+  if (/[^A-Za-z0-9]/.test(p)) score++;
+  const levels = [
+    { pct:'20%', color:'#e74c3c', label:'Weak' },
+    { pct:'40%', color:'#e67e22', label:'Fair' },
+    { pct:'60%', color:'#f39c12', label:'Good' },
+    { pct:'80%', color:'#27ae60', label:'Strong' },
+    { pct:'100%', color:'#1e8449', label:'Very Strong' },
+  ];
+  const lvl = levels[Math.min(score, 4)];
+  bar.style.width = lvl.pct;
+  bar.style.background = lvl.color;
+  lbl.textContent = p.length ? lvl.label : '';
+  lbl.style.color = lvl.color;
+}
+
+function togglePass(id, btn) {
+  const inp = document.getElementById(id);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁️'; }
+}
+
+function toggleChip(btn) {
+  btn.classList.toggle('on');
+}
+
+function selectLangOpt(btn) {
+  document.querySelectorAll('.lang-opt').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedLang = btn.dataset.lang;
+}
+
+function submitForm() {
+  const pass = document.getElementById('password').value;
+  const conf = document.getElementById('confirm-pass').value;
+  const terms = document.getElementById('terms').checked;
+
+  if (pass.length < 8) { showError('pass'); return; }
+  if (pass !== conf) { showError('confirm-pass'); return; }
+  if (!terms) { showToast('⚠️ Please agree to the Terms of Service'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div style="width:20px;height:20px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;"></div> Creating account...';
+  document.head.insertAdjacentHTML('beforeend', '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>');
+
+  // Save to localStorage
+  const fname = document.getElementById('fname').value;
+  const lname = document.getElementById('lname').value;
+  const userData = {
+    name: fname + ' ' + lname,
+    phone: document.getElementById('phone').value,
+    email: document.getElementById('email').value,
+    village: document.getElementById('village').value,
+    lang: selectedLang,
+    password: btoa(pass), // base64 (demo only, not real security)
+    joined: new Date().toISOString(),
+  };
+  localStorage.setItem('krishakUser', JSON.stringify(userData));
+  localStorage.setItem('krishakLang', selectedLang);
+
+  setTimeout(() => {
+    btn.innerHTML = '✓ Account created! Redirecting...';
+    btn.style.background = '#27ae60';
+    showToast(`🌱 Welcome, ${fname}! Taking you to your dashboard...`);
+    setTimeout(() => {
+      window.location.href = `home.html?lang=${selectedLang}`;
+    }, 1200);
+  }, 1800);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
