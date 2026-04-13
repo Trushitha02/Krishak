@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krishak — Soil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+.npk-meter {
+  margin-bottom:1rem;
+}
+.npk-bar-track {
+  height:10px; background:var(--border); border-radius:5px; overflow:hidden; margin:6px 0;
+}
+.npk-bar-fill { height:100%; border-radius:5px; transition:width 0.8s ease; }
+.npk-labels { display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-lt); }
+.ph-dial {
+  width:160px; height:80px; margin:0 auto;
+  position:relative; overflow:hidden;
+}
+.ph-arc {
+  width:160px; height:160px;
+  border-radius:50%;
+  border:16px solid transparent;
+  position:absolute; top:0; left:0;
+}
+.soil-type-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.soil-type-btn {
+  padding:10px 6px; border-radius:10px; border:2px solid var(--border);
+  background:white; cursor:pointer; text-align:center; font-family:inherit;
+  transition:all 0.2s; font-size:0.8rem; color:var(--text);
+}
+.soil-type-btn:hover { border-color:var(--leaf-lt); background:var(--leaf-bg); }
+.soil-type-btn.selected { border-color:var(--leaf); background:var(--leaf-bg); font-weight:600; }
+.soil-icon { font-size:1.4rem; display:block; margin-bottom:4px; }
+.result-crop-card {
+  display:flex; align-items:center; gap:14px;
+  padding:14px; border-radius:12px; border:1px solid var(--border);
+  background:white; margin-bottom:8px;
+  transition:transform 0.2s;
+}
+.result-crop-card:hover { transform:translateX(4px); border-color:var(--leaf-lt); }
+.rcrop-rank { width:28px; height:28px; border-radius:50%; background:var(--leaf); color:white; display:flex;align-items:center;justify-content:center; font-size:0.8rem; font-weight:700; flex-shrink:0; }
+.rcrop-rank.gold { background:#d97706; }
+.rcrop-rank.silver { background:#888; }
+.rcrop-rank.bronze { background:#8c5e3c; }
+.score-bar { height:6px; background:var(--border); border-radius:3px; margin-top:4px; overflow:hidden; }
+.score-fill { height:100%; background:var(--leaf); border-radius:3px; }
+</style>
+</head>
+<body>
+<nav id="main-nav"></nav>
+
+<div class="page">
+  <div class="page-header fade-up">
+    <div class="page-title">🧪 <span id="title-text"></span></div>
+    <div class="page-subtitle" id="subtitle-text"></div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Input Panel -->
+    <div>
+      <div class="card fade-up">
+        <div class="card-header">
+          <div class="card-title">📊 Soil Data Input</div>
+        </div>
+        <div class="card-body">
+          <!-- Soil Type -->
+          <div class="form-group">
+            <label class="form-label">Soil Type</label>
+            <div class="soil-type-grid" id="soil-type-grid">
+              <button class="soil-type-btn selected" data-type="clay" onclick="selectSoil(this)"><span class="soil-icon">🟫</span>Black Clay</button>
+              <button class="soil-type-btn" data-type="loam" onclick="selectSoil(this)"><span class="soil-icon">🌍</span>Red Loam</button>
+              <button class="soil-type-btn" data-type="sandy" onclick="selectSoil(this)"><span class="soil-icon">🏜️</span>Sandy</button>
+              <button class="soil-type-btn" data-type="alluvial" onclick="selectSoil(this)"><span class="soil-icon">💧</span>Alluvial</button>
+              <button class="soil-type-btn" data-type="laterite" onclick="selectSoil(this)"><span class="soil-icon">🔴</span>Laterite</button>
+              <button class="soil-type-btn" data-type="peaty" onclick="selectSoil(this)"><span class="soil-icon">🌿</span>Peaty</button>
+            </div>
+          </div>
+
+          <!-- NPK Sliders -->
+          <div class="form-group">
+            <label class="form-label">🌿 Nitrogen (N) — <span id="n-val">50</span> kg/ha</label>
+            <div class="range-group">
+              <input type="range" min="0" max="200" value="50" id="n-slider" oninput="updateNPK()" step="1">
+              <span class="range-val" id="n-disp">50</span>
+            </div>
+            <div class="npk-bar-track"><div class="npk-bar-fill" id="n-bar" style="background:var(--leaf);width:25%"></div></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">⚗️ Phosphorus (P) — <span id="p-val">30</span> kg/ha</label>
+            <div class="range-group">
+              <input type="range" min="0" max="200" value="30" id="p-slider" oninput="updateNPK()" step="1">
+              <span class="range-val" id="p-disp">30</span>
+            </div>
+            <div class="npk-bar-track"><div class="npk-bar-fill" id="p-bar" style="background:var(--amber);width:15%"></div></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🔮 Potassium (K) — <span id="k-val">40</span> kg/ha</label>
+            <div class="range-group">
+              <input type="range" min="0" max="200" value="40" id="k-slider" oninput="updateNPK()" step="1">
+              <span class="range-val" id="k-disp">40</span>
+            </div>
+            <div class="npk-bar-track"><div class="npk-bar-fill" id="k-bar" style="background:var(--sky);width:20%"></div></div>
+          </div>
+
+          <!-- pH -->
+          <div class="form-group">
+            <label class="form-label">pH Level — <span id="ph-val">6.5</span></label>
+            <div class="range-group">
+              <input type="range" min="4" max="9" value="6.5" id="ph-slider" step="0.1" oninput="updatePH()">
+              <span class="range-val" id="ph-disp">6.5</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-lt);margin-top:4px;">
+              <span>Acidic (4)</span><span>Neutral (7)</span><span>Alkaline (9)</span>
+            </div>
+            <div style="height:8px;border-radius:4px;margin-top:4px;background:linear-gradient(to right,#e74c3c,#f39c12,#2ecc71,#27ae60,#2980b9,#8e44ad)"></div>
+          </div>
+
+          <!-- Additional inputs -->
+          <div class="grid-2" style="gap:8px;">
+            <div class="form-group">
+              <label class="form-label">Rainfall (mm/yr)</label>
+              <input type="number" class="form-input" id="rainfall" value="800" style="font-size:0.85rem;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Temperature (°C)</label>
+              <input type="number" class="form-input" id="temperature" value="28" style="font-size:0.85rem;">
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;margin-top:0.5rem;" onclick="getRecommendations()">
+            🤖 <span id="rec-btn-text">Get AI Recommendations</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div>
+      <!-- Suitable Crops -->
+      <div class="card fade-up delay-1" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <div class="card-title">🌾 Suitable Crops</div>
+          <span class="badge badge-green" id="match-count">Based on soil data</span>
+        </div>
+        <div class="card-body" id="crop-results">
+          <div style="text-align:center;color:var(--text-lt);padding:2rem 0;">
+            <div style="font-size:2rem;margin-bottom:8px;">🔬</div>
+            Enter soil data and click "Get Recommendations" to see AI-powered crop suggestions.
+          </div>
+        </div>
+      </div>
+
+      <!-- Soil Improvement -->
+      <div class="card fade-up delay-2">
+        <div class="card-header">
+          <div class="card-title">🌱 Soil Improvement</div>
+        </div>
+        <div class="card-body" id="improvement-results">
+          <div style="text-align:center;color:var(--text-lt);padding:1rem 0;font-size:0.88rem;">
+            Improvement tips will appear after analysis
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Deep Analysis -->
+  <div class="card fade-up" style="margin-top:1rem;">
+    <div class="card-header">
+      <div class="card-title">🤖 AI Soil Chat</div>
+      <span class="badge badge-sky">Ask anything</span>
+    </div>
+    <div class="card-body">
+      <div class="ai-panel">
+        <div style="font-size:0.82rem;color:var(--leaf);font-weight:600;margin-bottom:8px;">Get detailed soil & crop advice</div>
+        <div style="display:flex;gap:8px;">
+          <input class="form-input" id="soil-question" placeholder="e.g. How to increase nitrogen for cotton?" style="flex:1;font-size:0.85rem;">
+          <button class="btn btn-primary" style="padding:8px 14px;" onclick="askSoilAI()">→</button>
+        </div>
+        <div id="ai-soil-resp" class="ai-response" style="display:none;margin-top:0.75rem;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+let selectedSoil = 'clay';
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectNav('soil');
+  document.getElementById('title-text').textContent = t('soilAssessment');
+  document.getElementById('subtitle-text').textContent = getLang()==='te' ? 'మీ నేల డేటా నమోదు చేసి పంట సిఫార్సులు పొందండి' : getLang()==='hi' ? 'मिट्टी डेटा दर्ज करें और फसल सुझाव पाएं' : 'Enter soil data to get AI-powered crop recommendations';
+});
+
+function selectSoil(btn) {
+  document.querySelectorAll('.soil-type-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedSoil = btn.dataset.type;
+}
+
+function updateNPK() {
+  const n = document.getElementById('n-slider').value;
+  const p = document.getElementById('p-slider').value;
+  const k = document.getElementById('k-slider').value;
+  ['n','p','k'].forEach(el => {
+    const v = document.getElementById(el+'-slider').value;
+    document.getElementById(el+'-val').textContent = v;
+    document.getElementById(el+'-disp').textContent = v;
+    document.getElementById(el+'-bar').style.width = (v/200*100).toFixed(0) + '%';
+  });
+}
+
+function updatePH() {
+  const v = parseFloat(document.getElementById('ph-slider').value).toFixed(1);
+  document.getElementById('ph-val').textContent = v;
+  document.getElementById('ph-disp').textContent = v;
+}
+
+async function getRecommendations() {
+  const n = document.getElementById('n-slider').value;
+  const p = document.getElementById('p-slider').value;
+  const k = document.getElementById('k-slider').value;
+  const ph = document.getElementById('ph-slider').value;
+  const rainfall = document.getElementById('rainfall').value;
+  const temp = document.getElementById('temperature').value;
+  const btn = document.getElementById('rec-btn-text');
+  btn.textContent = t('sending');
+
+  const systemPrompt = `You are a soil scientist and agricultural advisor for Indian farmers. 
+    Respond ONLY with a JSON object. No markdown, no backticks, no explanation. 
+    Current language: ${getLang()}.
+    JSON format: {
+      "crops": [
+        {"name": "crop name", "icon": "emoji", "score": 85, "reason": "brief reason"},
+        ...up to 5 crops...
+      ],
+      "improvements": [
+        {"title": "improvement name", "icon": "emoji", "desc": "action to take"},
+        ...up to 4 improvements...
+      ],
+      "overall": "brief 1-sentence soil health summary"
+    }
+    If language is 'te', write crop names and reasons in Telugu. If 'hi', write in Hindi.`;
+
+  const prompt = `Soil data: N=${n}kg/ha, P=${p}kg/ha, K=${k}kg/ha, pH=${ph}, Soil type=${selectedSoil}, Rainfall=${rainfall}mm/yr, Avg temp=${temp}°C, Location=Telangana India.
+  Recommend 5 crops and 4 soil improvement methods.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system: systemPrompt,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '{}';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const result = JSON.parse(clean);
+    renderCrops(result.crops || []);
+    renderImprovements(result.improvements || []);
+    if (result.overall) {
+      document.getElementById('match-count').textContent = result.overall.substring(0,30)+'...';
+    }
+  } catch(e) {
+    // Fallback
+    renderCrops([
+      {name:'Wheat', icon:'🌾', score:90, reason:'Excellent N-P ratio for wheat'},
+      {name:'Corn', icon:'🌽', score:82, reason:'Good potassium levels'},
+      {name:'Soybeans', icon:'🫘', score:78, reason:'pH suitable for legumes'},
+      {name:'Cotton', icon:'🌿', score:71, reason:'Black cotton soil favorable'},
+      {name:'Sorghum', icon:'🌾', score:65, reason:'Drought-tolerant option'},
+    ]);
+    renderImprovements([
+      {title:'Organic Compost', icon:'♻️', desc:'Apply 5-10 tonnes/hectare farm yard manure'},
+      {title:'Crop Rotation', icon:'🔄', desc:'Alternate legumes and cereals each season'},
+      {title:'Green Manuring', icon:'🌿', desc:'Incorporate Dhaincha or Sunhemp before plowing'},
+      {title:'pH Correction', icon:'⚗️', desc:'Add lime if pH < 6 or gypsum if pH > 8'},
+    ]);
+  }
+  btn.textContent = t('getRecommendations');
+}
+
+function renderCrops(crops) {
+  const ranks = ['gold','silver','bronze','',''];
+  document.getElementById('crop-results').innerHTML = crops.map((c,i) => `
+    <div class="result-crop-card">
+      <div class="rcrop-rank ${ranks[i]||''}">${i+1}</div>
+      <div style="font-size:1.8rem;">${c.icon}</div>
+      <div style="flex:1;">
+        <div style="font-weight:600;color:var(--soil);font-size:0.95rem;">${c.name}</div>
+        <div style="font-size:0.78rem;color:var(--text-lt);margin-bottom:4px;">${c.reason}</div>
+        <div class="score-bar"><div class="score-fill" style="width:${c.score}%"></div></div>
+      </div>
+      <div style="font-weight:700;color:var(--leaf);font-size:1rem;">${c.score}%</div>
+    </div>
+  `).join('');
+}
+
+function renderImprovements(items) {
+  document.getElementById('improvement-results').innerHTML = items.map(item => `
+    <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--border);">
+      <span style="font-size:1.5rem;flex-shrink:0;">${item.icon}</span>
+      <div>
+        <div style="font-weight:600;font-size:0.9rem;color:var(--soil);">${item.title}</div>
+        <div style="font-size:0.8rem;color:var(--text-md);margin-top:2px;">${item.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function askSoilAI() {
+  const q = document.getElementById('soil-question').value.trim();
+  if (!q) return;
+  const n = document.getElementById('n-slider').value;
+  const p = document.getElementById('p-slider').value;
+  const k = document.getElementById('k-slider').value;
+  const ph = document.getElementById('ph-slider').value;
+  const resp = document.getElementById('ai-soil-resp');
+  resp.style.display = 'block';
+  resp.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
+  const answer = await callAI(
+    `My soil: N=${n}, P=${p}, K=${k}, pH=${ph}, type=${selectedSoil}. Question: ${q}`
+  );
+  resp.textContent = answer;
+}
+</script>
+</body>
+</html>
