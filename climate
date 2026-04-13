@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krishak — Climate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+.forecast-card {
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:12px 8px; border-radius:12px; border:1px solid var(--border);
+  background:white; text-align:center; cursor:pointer;
+  transition:all 0.2s;
+}
+.forecast-card:hover, .forecast-card.active { background:var(--leaf-bg); border-color:var(--leaf-lt); }
+.fc-day { font-size:0.72rem; color:var(--text-lt); font-weight:600; text-transform:uppercase; }
+.fc-icon { font-size:1.8rem; }
+.fc-hi { font-size:1rem; font-weight:700; color:var(--soil); }
+.fc-lo { font-size:0.78rem; color:var(--text-lt); }
+.fc-rain { font-size:0.72rem; color:var(--sky); font-weight:600; }
+
+.wind-compass {
+  width:100px; height:100px;
+  border-radius:50%; border:2px solid var(--border);
+  position:relative; margin:0 auto;
+  background:radial-gradient(circle, var(--cream) 0%, white 100%);
+}
+.wind-needle {
+  position:absolute; top:50%; left:50%;
+  width:3px; height:40px;
+  background:linear-gradient(to bottom, var(--rust) 50%, var(--leaf) 50%);
+  border-radius:2px;
+  transform-origin:50% 100%;
+  transform:translateX(-50%) translateY(-100%) rotate(0deg);
+  transition:transform 1s ease;
+}
+</style>
+</head>
+<body>
+<nav id="main-nav"></nav>
+
+<div class="page">
+  <div class="page-header fade-up">
+    <div class="page-title">🌦️ <span id="title-text"></span></div>
+    <div class="page-subtitle" id="subtitle-text"></div>
+  </div>
+
+  <!-- Current Weather Hero -->
+  <div class="card fade-up" style="margin-bottom:1rem;background:linear-gradient(135deg,#1a4a7a 0%,#2e7bb5 50%,#5ba3d9 100%);color:white;border:none;">
+    <div class="card-body" style="padding:1.5rem;">
+      <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:4px;" id="location-label">📍 Hyderabad, Telangana</div>
+      <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div style="display:flex;align-items:flex-start;gap:4px;">
+            <div style="font-size:5rem;font-weight:800;line-height:1;" id="current-temp">--</div>
+            <div style="font-size:2rem;color:rgba(255,255,255,0.7);margin-top:12px;">°C</div>
+          </div>
+          <div style="font-size:1rem;opacity:0.85;" id="current-desc">Loading...</div>
+        </div>
+        <div style="font-size:4rem;margin-bottom:8px;" id="current-icon">🌤️</div>
+        <div style="flex:1;min-width:180px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;">
+              <div style="font-size:0.72rem;opacity:0.7;text-transform:uppercase;">Humidity</div>
+              <div style="font-size:1.2rem;font-weight:700;" id="current-humid">--%</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;">
+              <div style="font-size:0.72rem;opacity:0.7;text-transform:uppercase;">Wind</div>
+              <div style="font-size:1.2rem;font-weight:700;" id="current-wind">-- km/h</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;">
+              <div style="font-size:0.72rem;opacity:0.7;text-transform:uppercase;">Feels Like</div>
+              <div style="font-size:1.2rem;font-weight:700;" id="current-feels">--°C</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 12px;">
+              <div style="font-size:0.72rem;opacity:0.7;text-transform:uppercase;">UV Index</div>
+              <div style="font-size:1.2rem;font-weight:700;" id="current-uv">--</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.2);font-size:0.82rem;opacity:0.8;" id="sunrise-info">
+        🌅 Sunrise: -- &nbsp;|&nbsp; 🌇 Sunset: -- &nbsp;|&nbsp; 🌧️ Chance of rain: --%
+      </div>
+    </div>
+  </div>
+
+  <!-- 7-day Forecast -->
+  <div class="card fade-up delay-1" style="margin-bottom:1rem;">
+    <div class="card-header">
+      <div class="card-title">📅 7-Day Forecast</div>
+      <span class="badge badge-sky">Open-Meteo</span>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;" id="forecast-row"></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Weather Alerts -->
+    <div class="card fade-up delay-2">
+      <div class="card-header">
+        <div class="card-title">⚠️ Weather Alerts</div>
+        <span class="badge badge-rust" id="alert-count">0 alerts</span>
+      </div>
+      <div class="card-body" id="weather-alerts">
+        <div style="text-align:center;color:var(--text-lt);padding:1rem;">Loading alerts...</div>
+      </div>
+    </div>
+
+    <!-- AI Farming Advice -->
+    <div class="card fade-up delay-3">
+      <div class="card-header">
+        <div class="card-title">🤖 AI Weather Advice</div>
+      </div>
+      <div class="card-body">
+        <div class="ai-panel">
+          <div style="font-size:0.82rem;color:var(--leaf);font-weight:600;margin-bottom:8px;">Get crop-specific weather advice</div>
+          <select class="form-select" id="advice-crop" style="margin-bottom:8px;font-size:0.85rem;">
+            <option value="rice">🌾 Rice</option>
+            <option value="cotton">🌿 Cotton</option>
+            <option value="maize">🌽 Maize</option>
+            <option value="chilli">🌶️ Chilli</option>
+            <option value="vegetables">🥦 Vegetables</option>
+          </select>
+          <button class="btn btn-primary" style="width:100%;" onclick="getWeatherAdvice()">
+            Get Advice for Today's Weather
+          </button>
+          <div id="ai-weather-resp" class="ai-response" style="display:none;margin-top:0.75rem;"></div>
+        </div>
+
+        <!-- Wind compass -->
+        <div style="margin-top:1.25rem;text-align:center;">
+          <div style="font-size:0.82rem;font-weight:600;color:var(--text-md);margin-bottom:8px;">Wind Direction</div>
+          <div class="wind-compass">
+            <div class="wind-needle" id="wind-needle"></div>
+            <div style="position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:0.65rem;color:var(--text-lt);font-weight:600;">N</div>
+            <div style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:0.65rem;color:var(--text-lt);font-weight:600;">S</div>
+            <div style="position:absolute;top:50%;left:4px;transform:translateY(-50%);font-size:0.65rem;color:var(--text-lt);font-weight:600;">W</div>
+            <div style="position:absolute;top:50%;right:4px;transform:translateY(-50%);font-size:0.65rem;color:var(--text-lt);font-weight:600;">E</div>
+          </div>
+          <div style="font-size:0.82rem;color:var(--text-md);margin-top:8px;" id="wind-dir-text">NE — 12 km/h</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rain Chart -->
+  <div class="card fade-up" style="margin-top:1rem;">
+    <div class="card-header">
+      <div class="card-title">🌧️ Rainfall Forecast (mm)</div>
+    </div>
+    <div class="card-body">
+      <canvas id="rain-chart" height="100"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="shared.js"></script>
+<script>
+const WX_ICONS = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️' };
+const WX_DESC = { 0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',51:'Light drizzle',61:'Slight rain',63:'Moderate rain',80:'Rain showers',95:'Thunderstorm' };
+
+let weatherData = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  injectNav('climate');
+  document.getElementById('title-text').textContent = t('currentWeather');
+  document.getElementById('subtitle-text').textContent = getLang()==='te' ? 'వాతావరణ నవీకరణలు మరియు హెచ్చరికలు' : getLang()==='hi' ? 'मौसम अपडेट और अलर्ट' : 'Real-time weather updates and farming alerts';
+  fetchWeather();
+});
+
+async function fetchWeather() {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=17.38&longitude=78.49&current=temperature_2m,relativehumidity_2m,apparent_temperature,weathercode,windspeed_10m,winddirection_10m,uv_index,precipitation_probability&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset&timezone=Asia/Kolkata&forecast_days=7');
+    weatherData = await res.json();
+    renderCurrentWeather(weatherData);
+    renderForecast(weatherData);
+    renderRainChart(weatherData);
+    generateAlerts(weatherData);
+  } catch(e) {
+    console.error(e);
+    renderFallback();
+  }
+}
+
+function renderCurrentWeather(d) {
+  const c = d.current;
+  document.getElementById('current-temp').textContent = Math.round(c.temperature_2m);
+  document.getElementById('current-humid').textContent = Math.round(c.relativehumidity_2m) + '%';
+  document.getElementById('current-wind').textContent = Math.round(c.windspeed_10m) + ' km/h';
+  document.getElementById('current-feels').textContent = Math.round(c.apparent_temperature) + '°C';
+  document.getElementById('current-uv').textContent = Math.round(c.uv_index || 6);
+  document.getElementById('current-icon').textContent = WX_ICONS[c.weathercode] || '🌤️';
+  document.getElementById('current-desc').textContent = WX_DESC[c.weathercode] || 'Partly cloudy';
+
+  const sunrise = d.daily.sunrise[0].split('T')[1];
+  const sunset  = d.daily.sunset[0].split('T')[1];
+  const rainChance = d.daily.precipitation_probability_max[0];
+  document.getElementById('sunrise-info').innerHTML = `🌅 Sunrise: ${sunrise} &nbsp;|&nbsp; 🌇 Sunset: ${sunset} &nbsp;|&nbsp; 🌧️ Rain chance: ${rainChance}%`;
+
+  // Wind compass
+  const dir = c.winddirection_10m;
+  document.getElementById('wind-needle').style.transform = `translateX(-50%) translateY(-100%) rotate(${dir}deg)`;
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  const dName = dirs[Math.round(dir/45) % 8];
+  document.getElementById('wind-dir-text').textContent = `${dName} — ${Math.round(c.windspeed_10m)} km/h`;
+}
+
+function renderForecast(d) {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today = new Date();
+  const html = d.daily.weathercode.map((code, i) => {
+    const dt = new Date(today);
+    dt.setDate(dt.getDate() + i);
+    const dayName = i === 0 ? 'Today' : days[dt.getDay()];
+    const rain = d.daily.precipitation_probability_max[i];
+    return `
+      <div class="forecast-card ${i===0?'active':''}">
+        <div class="fc-day">${dayName}</div>
+        <div class="fc-icon">${WX_ICONS[code]||'🌤️'}</div>
+        <div class="fc-hi">${Math.round(d.daily.temperature_2m_max[i])}°</div>
+        <div class="fc-lo">${Math.round(d.daily.temperature_2m_min[i])}°</div>
+        ${rain > 20 ? `<div class="fc-rain">💧${rain}%</div>` : ''}
+      </div>
+    `;
+  }).join('');
+  document.getElementById('forecast-row').innerHTML = html;
+}
+
+function renderRainChart(d) {
+  const ctx = document.getElementById('rain-chart').getContext('2d');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today = new Date();
+  const labels = d.daily.weathercode.map((_, i) => {
+    const dt = new Date(today); dt.setDate(dt.getDate() + i);
+    return i === 0 ? 'Today' : days[dt.getDay()];
+  });
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Rainfall (mm)',
+        data: d.daily.precipitation_sum,
+        backgroundColor: 'rgba(46,123,181,0.5)',
+        borderColor: '#2e7bb5',
+        borderWidth: 1,
+        borderRadius: 4,
+      }, {
+        type: 'line',
+        label: 'Rain Probability (%)',
+        data: d.daily.precipitation_probability_max,
+        borderColor: '#b5451b',
+        tension: 0.4,
+        yAxisID: 'y1',
+        fill: false,
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { title:{ display:true, text:'mm', font:{size:11} }, ticks:{font:{size:11}} },
+        y1: { position:'right', min:0, max:100, title:{ display:true, text:'%', font:{size:11} }, ticks:{font:{size:11}} }
+      },
+      plugins: { legend: { position:'bottom', labels:{ font:{size:11}, boxWidth:12 } } }
+    }
+  });
+}
+
+function generateAlerts(d) {
+  const alerts = [];
+  const maxTemp = d.daily.temperature_2m_max[0];
+  const minTemp = d.daily.temperature_2m_min[0];
+  const rain = d.daily.precipitation_sum.reduce((a,b) => a+b, 0);
+  const rainChance = d.daily.precipitation_probability_max[0];
+
+  if (maxTemp > 40) alerts.push({ type:'danger', icon:'🌡️', title:'Extreme Heat Warning', msg:`Temperature reaching ${Math.round(maxTemp)}°C. Irrigate early morning. Avoid field work 11am–4pm.` });
+  if (minTemp < 10) alerts.push({ type:'warning', icon:'❄️', title: t('frost'), msg:`Night temperature dropping to ${Math.round(minTemp)}°C. Cover nursery beds and protect tender crops.` });
+  if (rainChance > 70) alerts.push({ type:'info', icon:'🌧️', title: t('rain'), msg:`${rainChance}% chance of rain today. Postpone pesticide spraying. Check field drainage.` });
+  if (rain < 2 && maxTemp > 36) alerts.push({ type:'warning', icon:'☀️', title: t('drought'), msg:'Dry spell continuing. Schedule additional irrigation. Mulch to retain soil moisture.' });
+  if (d.current?.windspeed_10m > 30) alerts.push({ type:'warning', icon:'💨', title:'High Wind Advisory', msg:`Winds at ${Math.round(d.current.windspeed_10m)} km/h. Delay spraying operations. Secure greenhouse covers.` });
+
+  if (alerts.length === 0) {
+    alerts.push({ type:'success', icon:'✅', title:'No Critical Alerts', msg:'Weather conditions are favorable for farming today. Good time for field operations.' });
+  }
+
+  document.getElementById('alert-count').textContent = `${alerts.length} alert${alerts.length!==1?'s':''}`;
+  document.getElementById('weather-alerts').innerHTML = alerts.map(a => `
+    <div class="alert alert-${a.type}">
+      <div class="alert-icon">${a.icon}</div>
+      <div class="alert-body">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-msg">${a.msg}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderFallback() {
+  document.getElementById('current-temp').textContent = '32';
+  document.getElementById('current-humid').textContent = '65%';
+  document.getElementById('current-wind').textContent = '12 km/h';
+  document.getElementById('current-feels').textContent = '35°C';
+  document.getElementById('current-uv').textContent = '7';
+  document.getElementById('current-icon').textContent = '🌤️';
+  document.getElementById('current-desc').textContent = 'Partly cloudy';
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  document.getElementById('forecast-row').innerHTML = days.map((d,i) => `
+    <div class="forecast-card ${i===0?'active':''}">
+      <div class="fc-day">${d}</div>
+      <div class="fc-icon">🌤️</div>
+      <div class="fc-hi">${30+i}°</div>
+      <div class="fc-lo">${22+i}°</div>
+    </div>
+  `).join('');
+}
+
+async function getWeatherAdvice() {
+  const crop = document.getElementById('advice-crop').value;
+  const temp = document.getElementById('current-temp').textContent;
+  const humid = document.getElementById('current-humid').textContent;
+  const wind = document.getElementById('current-wind').textContent;
+  const resp = document.getElementById('ai-weather-resp');
+  resp.style.display = 'block';
+  resp.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
+  const answer = await callAI(
+    `Current weather in Hyderabad: Temperature ${temp}°C, Humidity ${humid}, Wind ${wind}. 
+    Give specific farming advice for ${crop} in this weather. Include: should I irrigate? spray? any risks? What should I do today?`
+  );
+  resp.textContent = answer;
+}
+</script>
+</body>
+</html>
