@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krishak — Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav id="main-nav"></nav>
+
+<div class="page">
+  <!-- Hero Banner -->
+  <div class="fade-up" style="background:linear-gradient(135deg,#2a4f27 0%,#3a6b35 60%,#5a9a52 100%);border-radius:16px;padding:2rem 2rem 1.5rem;margin-bottom:1.5rem;color:white;position:relative;overflow:hidden;">
+    <div style="position:absolute;right:-20px;bottom:-20px;font-size:8rem;opacity:0.12;line-height:1;">🌾</div>
+    <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:6px;" id="hero-date"></div>
+    <div style="font-size:1.5rem;font-weight:700;margin-bottom:6px;" id="hero-welcome"></div>
+    <div style="font-size:0.88rem;opacity:0.8;" id="hero-sub"></div>
+    <div style="margin-top:1.25rem;display:flex;gap:10px;flex-wrap:wrap;">
+      <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 14px;font-size:0.82rem;" id="hero-weather">
+        <span>🌤️ </span><span id="hero-temp">Loading weather...</span>
+      </div>
+      <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px 14px;font-size:0.82rem;" id="hero-tip">
+        💡 AI tip loading...
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Tools -->
+  <div class="card fade-up delay-1" style="margin-bottom:1rem;">
+    <div class="card-header">
+      <div class="card-title">⚡ Quick Tools</div>
+    </div>
+    <div class="card-body" style="padding:1rem;">
+      <div class="quick-grid" id="quick-tools"></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Market News -->
+    <div class="card fade-up delay-2">
+      <div class="card-header">
+        <div class="card-title">📈 Market News & Offers</div>
+        <a href="market.html" style="font-size:0.78rem;color:var(--leaf);text-decoration:none;font-weight:600;">View all →</a>
+      </div>
+      <div class="card-body" id="market-preview"></div>
+    </div>
+
+    <!-- AI Daily Briefing -->
+    <div class="card fade-up delay-3">
+      <div class="card-header">
+        <div class="card-title">🤖 AI Daily Briefing</div>
+        <button class="btn btn-secondary" style="padding:5px 12px;font-size:0.78rem;" onclick="refreshBriefing()">↻ Refresh</button>
+      </div>
+      <div class="card-body">
+        <div class="ai-panel" style="padding:1rem;">
+          <div style="font-size:0.82rem;color:var(--leaf);font-weight:600;margin-bottom:8px;">Ask anything about farming</div>
+          <div style="display:flex;gap:8px;">
+            <input class="form-input" id="ai-home-q" placeholder="e.g. When to irrigate cotton?" style="flex:1;padding:8px 12px;font-size:0.85rem;">
+            <button class="btn btn-primary" style="padding:8px 14px;" onclick="askHomeAI()">→</button>
+          </div>
+          <div id="ai-home-resp" class="ai-response" style="display:none;margin-top:0.75rem;"></div>
+        </div>
+
+        <!-- Seed Discounts -->
+        <div style="margin-top:1rem;">
+          <div style="font-size:0.85rem;font-weight:600;color:var(--soil);margin-bottom:8px;">🌱 Seed Discounts</div>
+          <div id="seed-offers"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Latest Trends Chart -->
+  <div class="card fade-up" style="margin-top:1rem;">
+    <div class="card-header">
+      <div class="card-title">📊 Market Trends This Week</div>
+      <span class="badge badge-green">Live</span>
+    </div>
+    <div class="card-body">
+      <canvas id="trend-chart" height="120"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="shared.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  injectNav('home');
+  renderHero();
+  renderQuickTools();
+  renderMarketPreview();
+  renderSeedOffers();
+  renderTrendChart();
+  loadWeather();
+  loadDailyTip();
+});
+
+function renderHero() {
+  const now = new Date();
+  document.getElementById('hero-date').textContent = now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('hero-welcome').textContent = t('welcomeMsg');
+  document.getElementById('hero-sub').textContent = getLang()==='te' ? 'మీ పంటలకు ఉత్తమ సలహాలు పొందండి' : getLang()==='hi' ? 'अपनी फसलों के लिए सर्वोत्तम सलाह पाएं' : 'Get the best advice for your crops today';
+}
+
+async function loadWeather() {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=17.38&longitude=78.49&current=temperature_2m,weathercode&timezone=Asia/Kolkata');
+    const d = await res.json();
+    const temp = Math.round(d.current.temperature_2m);
+    const icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',61:'🌧️',80:'🌦️'};
+    const code = d.current.weathercode;
+    const icon = icons[code] || '🌤️';
+    document.getElementById('hero-weather').innerHTML = `${icon} ${temp}°C — Hyderabad`;
+    document.getElementById('hero-temp').textContent = `${temp}°C`;
+  } catch(e) {
+    document.getElementById('hero-weather').innerHTML = '🌤️ 32°C — Hyderabad';
+  }
+}
+
+async function loadDailyTip() {
+  const tips = [
+    'Check soil moisture before morning irrigation',
+    'Apply neem-based pesticide in evening hours',
+    'Monitor for aphids in this weather',
+    'Good time to apply potash fertilizer',
+    'Avoid water-logging in cotton fields'
+  ];
+  const tip = tips[new Date().getDay() % tips.length];
+  document.getElementById('hero-tip').textContent = '💡 ' + tip;
+}
+
+function renderQuickTools() {
+  const tools = [
+    { icon:'📅', label: t('cropCalendar'),    href:'calender.html' },
+    { icon:'🌦️', label: t('climateAlerts'),   href:'climate.html' },
+    { icon:'🧪', label: t('soilAssessment'),  href:'soil.html' },
+    { icon:'📈', label: t('marketPrices'),    href:'market.html' },
+    { icon:'⚡', label: t('powerSchedule'),   href:'power.html' },
+    { icon:'🤖', label: t('askAI'),           href:'soil.html' },
+  ];
+  document.getElementById('quick-tools').innerHTML = tools.map(tool => `
+    <a href="${tool.href}?lang=${getLang()}" class="quick-btn">
+      <span class="quick-btn-icon">${tool.icon}</span>
+      <span class="quick-btn-label">${tool.label}</span>
+    </a>
+  `).join('');
+}
+
+function renderMarketPreview() {
+  const crops = [
+    { name: getLang()==='te'?'వరి':getLang()==='hi'?'चावल':'Rice',   price: 2150, change: +85,  unit:'₹/qtl' },
+    { name: getLang()==='te'?'పత్తి':getLang()==='hi'?'कपास':'Cotton', price: 6800, change: -120, unit:'₹/qtl' },
+    { name: getLang()==='te'?'మొక్కజొన్న':getLang()==='hi'?'मक्का':'Maize', price: 1890, change: +45, unit:'₹/qtl' },
+    { name: getLang()==='te'?'మిరప':getLang()==='hi'?'मिर्च':'Chilli', price: 12400, change: +650, unit:'₹/qtl' },
+  ];
+  document.getElementById('market-preview').innerHTML = crops.map(c => `
+    <div class="ticker-row">
+      <div class="ticker-crop">${c.name}</div>
+      <div>
+        <div class="ticker-price" style="color:var(--soil)">${c.price.toLocaleString('en-IN')} ${c.unit}</div>
+        <div class="ticker-change ${c.change>=0?'stat-change up':'stat-change down'}">${c.change>=0?'↑':'↓'} ₹${Math.abs(c.change)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSeedOffers() {
+  const offers = [
+    { crop:'🌾 Wheat Seeds', off:'15% OFF', valid:'Till Apr 20', dealer:'AgroMart Hyderabad' },
+    { crop:'🌻 Sunflower', off:'20% OFF', valid:'Limited Stock', dealer:'KisanBazar' },
+    { crop:'🌽 Hybrid Corn', off:'10% OFF', valid:'New Season', dealer:'Green Fields Co.' },
+  ];
+  document.getElementById('seed-offers').innerHTML = offers.map(o => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border);">
+      <span style="font-size:0.88rem;flex:1;color:var(--text)">${o.crop}</span>
+      <span class="badge badge-green">${o.off}</span>
+      <span style="font-size:0.75rem;color:var(--text-lt)">${o.valid}</span>
+    </div>
+  `).join('');
+}
+
+function renderTrendChart() {
+  const ctx = document.getElementById('trend-chart').getContext('2d');
+  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  new Chart(ctx, {
+    type:'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'Rice (₹/qtl)', data:[2050,2080,2100,2090,2150,2120,2150], borderColor:'#3a6b35', tension:0.4, fill:false, pointRadius:3 },
+        { label:'Cotton (₹/qtl)', data:[6900,6850,6820,6800,6780,6800,6800], borderColor:'#b5451b', tension:0.4, fill:false, pointRadius:3 },
+        { label:'Maize (₹/qtl)', data:[1820,1840,1860,1870,1880,1890,1890], borderColor:'#d97706', tension:0.4, fill:false, pointRadius:3 },
+      ]
+    },
+    options: {
+      responsive:true, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:12 } } },
+      scales:{ y:{ ticks:{ font:{size:11} } }, x:{ ticks:{ font:{size:11} } } }
+    }
+  });
+}
+
+async function askHomeAI() {
+  const q = document.getElementById('ai-home-q').value.trim();
+  if (!q) return;
+  const resp = document.getElementById('ai-home-resp');
+  resp.style.display = 'block';
+  resp.innerHTML = '<div class="ai-typing"><span></span><span></span><span></span></div>';
+  const answer = await callAI(q);
+  resp.textContent = answer;
+}
+
+function refreshBriefing() {
+  loadDailyTip();
+}
+</script>
+</body>
+</html>
