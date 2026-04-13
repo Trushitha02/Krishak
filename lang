@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krishak — Choose Language</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Noto+Sans+Telugu:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --soil: #3d2b1f; --soil-md: #5c3d2b; --cream: #faf6ef;
+  --wheat: #e8c97a; --wheat-lt: #f5e6b3; --leaf: #3a6b35;
+  --leaf-lt: #5a9a52; --leaf-bg: #eaf4e8; --border: #d4c4b0;
+  --text: #1c1410; --text-lt: #8c7060;
+}
+html, body { height: 100%; }
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated field background */
+.bg-field {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #c8e6c0 0%, #a8d49a 30%, #7ab870 50%,
+    #5a9a52 60%, #3a6b35 70%, #2a4f27 80%,
+    #6b4423 90%, #3d2b1f 100%
+  );
+  z-index: 0;
+}
+.bg-sun {
+  position: fixed;
+  top: 8%;
+  right: 15%;
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle, #f9d84a 30%, #f5b942 60%, transparent 80%);
+  border-radius: 50%;
+  z-index: 1;
+  animation: sunPulse 4s ease-in-out infinite;
+}
+@keyframes sunPulse {
+  0%,100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+/* Crop rows */
+.crop-rows {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45%;
+  z-index: 2;
+  overflow: hidden;
+}
+.crop-row {
+  display: flex;
+  gap: 24px;
+  padding: 0 20px;
+  margin-bottom: 4px;
+  animation: rowSway 3s ease-in-out infinite alternate;
+}
+.crop-row:nth-child(odd) { animation-delay: -1.5s; justify-content: flex-start; }
+.crop-row:nth-child(even) { justify-content: center; }
+.crop-plant {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+/* Main card */
+.lang-card {
+  position: relative;
+  z-index: 10;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  width: min(400px, 90vw);
+  border: 2px solid rgba(232,201,122,0.6);
+  box-shadow: 0 20px 60px rgba(61,43,31,0.3);
+  text-align: center;
+  animation: cardEntry 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes cardEntry {
+  from { opacity: 0; transform: scale(0.85) translateY(30px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.app-logo {
+  width: 72px;
+  height: 72px;
+  background: var(--leaf-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 1rem;
+  border: 3px solid var(--leaf-lt);
+}
+.app-name {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--soil);
+  letter-spacing: -0.02em;
+}
+.app-tagline {
+  font-size: 0.85rem;
+  color: var(--text-lt);
+  margin: 6px 0 1.75rem;
+}
+
+.choose-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-lt);
+  margin-bottom: 12px;
+}
+
+.lang-options { display: flex; flex-direction: column; gap: 10px; }
+.lang-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--cream);
+  cursor: pointer;
+  font-family: 'Sora', 'Noto Sans Telugu', 'Noto Sans Devanagari', sans-serif;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+.lang-btn:hover {
+  border-color: var(--leaf);
+  background: var(--leaf-bg);
+  transform: translateX(4px);
+}
+.lang-flag {
+  font-size: 1.6rem;
+  width: 36px;
+  text-align: center;
+}
+.lang-name { font-size: 1.05rem; font-weight: 600; color: var(--soil); }
+.lang-native { font-size: 0.82rem; color: var(--text-lt); }
+.lang-arrow { margin-left: auto; color: var(--leaf); font-size: 1.1rem; opacity: 0; transition: opacity 0.2s; }
+.lang-btn:hover .lang-arrow { opacity: 1; }
+
+.footer-note {
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--text-lt);
+}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<div class="bg-sun"></div>
+<div class="crop-rows">
+  <div class="crop-row"><span class="crop-plant">🌾</span><span class="crop-plant">🌾</span><span class="crop-plant">🌾</span><span class="crop-plant">🌾</span><span class="crop-plant">🌾</span><span class="crop-plant">🌾</span><span class="crop-plant">🌾</span><span class="crop-plant">🌾</span><span class="crop-plant">🌾</span><span class="crop-plant">🌾</span></div>
+  <div class="crop-row"><span class="crop-plant">🌽</span><span class="crop-plant">🌽</span><span class="crop-plant">🌽</span><span class="crop-plant">🌽</span><span class="crop-plant">🌽</span><span class="crop-plant">🌽</span><span class="crop-plant">🌽</span><span class="crop-plant">🌽</span></div>
+  <div class="crop-row"><span class="crop-plant">🌻</span><span class="crop-plant">🌻</span><span class="crop-plant">🌻</span><span class="crop-plant">🌻</span><span class="crop-plant">🌻</span><span class="crop-plant">🌻</span><span class="crop-plant">🌻</span><span class="crop-plant">🌻</span><span class="crop-plant">🌻</span></div>
+</div>
+
+<div class="lang-card">
+  <div class="app-logo">🌱</div>
+  <div class="app-name">Krishak</div>
+  <div class="app-tagline">Smart Farming Assistant · స్మార్ట్ వ్యవసాయం · स्मार्ट खेती</div>
+
+  <div class="choose-label">Choose Your Language / భాష ఎంచుకోండి / भाषा चुनें</div>
+
+  <div class="lang-options">
+    <button class="lang-btn" onclick="selectLang('en')">
+      <span class="lang-flag">🇬🇧</span>
+      <div>
+        <div class="lang-name">English</div>
+        <div class="lang-native">International</div>
+      </div>
+      <span class="lang-arrow">→</span>
+    </button>
+
+    <button class="lang-btn" onclick="selectLang('te')">
+      <span class="lang-flag">🇮🇳</span>
+      <div>
+        <div class="lang-name" style="font-family:'Noto Sans Telugu',sans-serif">తెలుగు</div>
+        <div class="lang-native">Telugu · Andhra Pradesh, Telangana</div>
+      </div>
+      <span class="lang-arrow">→</span>
+    </button>
+
+    <button class="lang-btn" onclick="selectLang('hi')">
+      <span class="lang-flag">🇮🇳</span>
+      <div>
+        <div class="lang-name" style="font-family:'Noto Sans Devanagari',sans-serif">हिन्दी</div>
+        <div class="lang-native">Hindi · Nationwide</div>
+      </div>
+      <span class="lang-arrow">→</span>
+    </button>
+  </div>
+
+  <div class="footer-note">AI-powered · Offline friendly · Free for farmers</div>
+</div>
+
+<script>
+function selectLang(lang) {
+  localStorage.setItem('krishakLang', lang);
+  window.location.href = `home.html?lang=${lang}`;
+}
+// Auto-redirect if lang already set
+const saved = localStorage.getItem('krishakLang');
+if (saved && window.location.hash !== '#reset') {
+  // Don't auto-redirect — let user choose
+}
+</script>
+</body>
+</html>
